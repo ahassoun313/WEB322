@@ -1,5 +1,5 @@
 /********************************************************************************
-* WEB322 – Assignment 02
+* WEB322 – Assignment 03
 *
 * I declare that this assignment is my own work in accordance with Seneca's
 * Academic Integrity Policy:
@@ -14,42 +14,62 @@
 const express = require("express");
 const legoData = require("./modules/legoSets");
 const themeData = require("./data/themeData");
+const path = require("path");
 
 const app = express();
 const port = 3000;
 
+app.use(express.static("public"));
+
+// Home route
 app.get("/", (req, res) => {
-  res.send("Assignment 2: Ali Hassoun - 103519237");
+  res.sendFile(path.join(__dirname, "views", "home.html"));
 });
 
+// About route
+app.get("/about", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "about.html"));
+});
+
+//Lego set by number
+app.get("/lego/sets/:setNum", (req, res) => {
+  const setNum = req.params.setNum;
+  legoData
+    .getSetByNum(setNum)
+    .then((set) => {
+      res.json(set);
+    })
+    .catch((error) => {
+      res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
+    });
+});
+
+// Filter by theme or return all sets if no theme is provided
 app.get("/lego/sets", async (req, res) => {
   try {
-    await legoData.initialize();
-    const allSets = await legoData.getAllSets();
-    res.json(allSets);
+    const theme = req.query.theme;
+    let sets;
+
+    if (theme) {
+      sets = await legoData.getSetsByTheme(theme);
+    } else {
+      sets = await legoData.getAllSets();
+    }
+
+    if (sets.length > 0) {
+      res.json(sets);
+    } else {
+      res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
+    }
   } catch (error) {
-    res.status(500).send(error);
+    console.error(error);
+    res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
   }
 });
 
-app.get("/lego/sets/num-demo", async (req, res) => {
-  try {
-    await legoData.initialize();
-    const specificSet = await legoData.getSetByNum("001-1");
-    res.json(specificSet);
-  } catch (error) {
-    res.status(404).send(error);
-  }
-});
-
-app.get("/lego/sets/theme-demo", async (req, res) => {
-  try {
-    await legoData.initialize();
-    const setsByTheme = await legoData.getSetsByTheme("tech");
-    res.json(setsByTheme);
-  } catch (error) {
-    res.status(404).send(error);
-  }
+ 
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
 });
 
 app.listen(port, () => {
