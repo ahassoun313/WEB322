@@ -2,7 +2,7 @@
   "name": "assignment2",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "tw:build": "tailwindcss build -i ./public/css/tailwind.css -o ./public/css/main.css",
     "test": "echo \"Error: no test specified\" && exit 1"
